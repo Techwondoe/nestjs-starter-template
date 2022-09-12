@@ -1,0 +1,45 @@
+version: '3.3'
+services:
+  api:
+    container_name: template-api
+    image: twd/template:latest
+    build:
+      context: .
+      target: development
+      dockerfile: ./dockerfile
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 1001:3000
+      - 9229:9229
+    networks:
+      - nesjs-network
+    env_file : .env
+    environment:
+      CONNECTION_STRING: 'postgresql://test:test@host.docker.internal:15434/template'
+      NODE_ENV: Development
+      MIGRATE_ON_RUN: 'true'
+    restart: unless-stopped
+    command: npm run start:debug
+    depends_on:
+     - postgres
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: template
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    networks:
+      - nesjs-network
+    ports:
+      - 15434:5432
+    volumes:
+      - ./database/postgres:/var/lib/postgresql/data
+networks:
+    nesjs-network:
+      driver: bridge
+volumes:
+  data_share:
+    driver: local
